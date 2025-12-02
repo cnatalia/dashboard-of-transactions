@@ -37,6 +37,7 @@ Dashboard web para visualizar y gestionar transacciones de Bold, construido con 
 - **Estilos**: Tailwind CSS v4, Material-UI v7
 - **Estado del Servidor**: React Query (@tanstack/react-query)
 - **Tablas**: React Table (@tanstack/react-table)
+- **Testing**: Jest con jest-environment-jsdom
 - **Utilidades**: 
   - `date-fns` para manejo de fechas
   - `remeda` para programación funcional
@@ -68,6 +69,9 @@ npm run dev
 - `npm run build`: Construye la aplicación para producción
 - `npm run start`: Inicia el servidor de producción
 - `npm run lint`: Ejecuta el linter de ESLint
+- `npm test`: Ejecuta los tests unitarios con Jest
+- `npm run test:watch`: Ejecuta los tests en modo watch
+- `npm run test:coverage`: Ejecuta los tests con reporte de cobertura
 
 ## 📁 Estructura del Proyecto
 
@@ -99,7 +103,9 @@ dashboard/
 │   ├── filters-context.tsx    # Context para filtros globales
 │   └── react-query-providers.tsx # Provider de React Query
 ├── utils/                      # Funciones utilitarias
-│   └── filters.tsx             # Funciones de filtrado y formateo
+│   ├── filters.tsx             # Funciones de filtrado y formateo
+│   └── __tests__/              # Tests unitarios
+│       └── filters.test.ts     # Tests para funciones de filtrado
 ├── constants/                  # Constantes de la aplicación
 │   └── index.ts                # Enums y mapeos
 └── ui/                         # Configuración de UI
@@ -248,6 +254,21 @@ npm run start
 - Estado global compartido
 - Sincronización con URL sin `useEffect`
 - Simplicidad para este caso de uso
+
+## 🧪 Testing
+
+El proyecto utiliza **Jest** para pruebas unitarias. Los tests están ubicados en `utils/__tests__/` y cubren:
+
+- Funciones de filtrado de fechas (`matchesDateFilter`)
+- Funciones de filtrado combinado (`customGlobalFilterFn`)
+- Funciones de formateo de fechas (`formatToday`, `formatWeekRange`, `formatMonthYear`)
+
+Para ejecutar los tests:
+```bash
+npm test              # Ejecutar todos los tests
+npm run test:watch    # Modo watch (re-ejecuta al cambiar archivos)
+npm run test:coverage # Con reporte de cobertura
+```
 
 ## 📝 Notas Adicionales
 
