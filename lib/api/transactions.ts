@@ -3,32 +3,20 @@
  * These can be used in Server Components for initial data loading
  */
 
-type Transaction = {
-  id: string;
-  status: string;
-  paymentMethod: string;
-  salesType: string;
-  createdAt: number;
-  transactionReference: number;
-  amount: number;
-  deduction?: number;
-};
+import type { ApiResponse } from './format-transactions';
+import { TRANSACTIONS_ENDPOINT } from './config';
 
-type ApiResponse = {
-  data: Transaction[];
-};
+// Re-export types for convenience
+export type { ApiResponse } from './format-transactions';
 
 /**
  * Fetches transactions from the API
- * This function can be used in Server Components
  */
 export async function getTransactions(): Promise<ApiResponse> {
   try {
-    const response = await fetch('https://bold-fe-api.vercel.app/api', {
-      // Next.js automatically deduplicates requests
-      // Add cache options for better control
+    const response = await fetch(TRANSACTIONS_ENDPOINT, {
       next: { 
-        revalidate: 60, // Revalidate every 60 seconds
+        revalidate: 60, 
       },
     });
 
@@ -42,17 +30,5 @@ export async function getTransactions(): Promise<ApiResponse> {
     console.error('Error fetching transactions:', error);
     throw error;
   }
-}
-
-/**
- * Type guard to check if response has expected structure
- */
-export function isValidTransactionsResponse(data: unknown): data is ApiResponse {
-  return (
-    typeof data === 'object' &&
-    data !== null &&
-    'data' in data &&
-    Array.isArray((data as ApiResponse).data)
-  );
 }
 

@@ -31,17 +31,9 @@ export const FiltersContext = createContext<FiltersContextType | undefined>(unde
  * - `?date=today` → `dateFilter`
  * - `?salesTypes=PAYMENT_LINK,TERMINAL` → `salesTypeFilters`
  * 
- * Los filtros se persisten en la URL sin usar `useEffect`, actualizando directamente
- * cuando se cambian mediante los setters.
  * 
  * @param {ReactNode} children - Componentes hijos que tendrán acceso al contexto
  * 
- * @example
- * ```tsx
- * <FiltersProvider>
- *   <App />
- * </FiltersProvider>
- * ```
  */
 export function FiltersProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -140,11 +132,6 @@ export function FiltersProvider({ children }: { children: ReactNode }) {
  * 
  * @throws {Error} Si se usa fuera de `FiltersProvider`
  * 
- * @example
- * ```tsx
- * const { globalFilter, setGlobalFilter } = useFilters();
- * <input value={globalFilter} onChange={(e) => setGlobalFilter(e.target.value)} />
- * ```
  */
 export function useFilters() {
   const context = useContext(FiltersContext);

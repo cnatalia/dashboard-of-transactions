@@ -66,6 +66,8 @@ export default function TransactionsTable({
     {
       header: "Tipo de venta",
       accessorKey: "salesType",
+      enableHiding: false,
+      // Esta columna se oculta visualmente pero se mantiene para filtros
     },
     {
       header: "ID transacción Bold",

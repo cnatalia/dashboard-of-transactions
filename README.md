@@ -27,7 +27,11 @@ Dashboard web para visualizar y gestionar transacciones de Bold, construido con 
 - **Modal de Detalles**: Vista lateral con información completa de cada transacción
 - **Responsive Design**: Diseño adaptativo para móviles y escritorio
 - **Accesibilidad**: Implementación de ARIA, semántica HTML5 y navegación por teclado
-- **Optimización de Performance**: React Query para caching, debounce en búsqueda, Server Components
+- **Optimización de Performance**: 
+  - Patrón híbrido (Server + Client) con ISR
+  - React Query para caching inteligente
+  - Debounce en búsqueda
+  - Separación de datos RAW y transformación con `useMemo`
 
 ## 🛠 Tecnologías
 
@@ -98,7 +102,9 @@ dashboard/
 │   └── use-get-transactions.tsx # Hook para obtener transacciones
 ├── lib/                        # Utilidades y funciones del servidor
 │   └── api/
-│       └── transactions.ts     # Función para fetch en Server Components
+│       ├── config.ts          # Configuración centralizada (URLs de API)
+│       ├── format-transactions.ts # Función unificada para formatear transacciones
+│       └── transactions.ts    # Función para fetch en Server Components
 ├── providers/                  # Context providers
 │   ├── filters-context.tsx    # Context para filtros globales
 │   └── react-query-providers.tsx # Provider de React Query
@@ -113,6 +119,28 @@ dashboard/
 ```
 
 ## 🏗 Arquitectura
+
+### Patrón Híbrido (Server + Client)
+
+El proyecto implementa el **patrón híbrido** siguiendo las mejores prácticas de Next.js App Router:
+
+1. **Server Component** (`app/page.tsx`):
+   - Obtiene datos iniciales con `getTransactions()` en el servidor
+   - ISR (Incremental Static Regeneration) con `revalidate: 60s`
+   - Mejora SEO, performance y UX (datos disponibles inmediatamente)
+   - Pasa `initialData` a Client Components
+
+2. **Client Component** (`DashboardClient.tsx`):
+   - Recibe `initialData` del servidor
+   - Usa `useGetTransactions(initialData)` para formatear y reaccionar a cambios
+   - Re-calcula `totalCount` cuando cambia `dateFilter` usando `useMemo`
+
+**Beneficios:**
+- ✅ Datos en HTML inicial (mejor SEO)
+- ✅ Menos requests HTTP desde el cliente
+- ✅ Caching en servidor (ISR) + cliente (React Query)
+- ✅ `totalCount` se actualiza correctamente cuando cambia el filtro
+
 
 ### Server Components vs Client Components
 
@@ -182,16 +210,44 @@ Barra de búsqueda con debounce para optimizar las búsquedas.
 
 Hook que utiliza React Query para obtener y formatear transacciones desde la API.
 
+**Parámetros:**
+- `initialData?: ApiResponse`: Datos iniciales desde Server Component (opcional)
+
 **Retorna:**
 - `data`: Objeto con `transactions` y `totalCountFormatted`
 - `isLoading`: Estado de carga
 - `error`: Error si existe
 
 **Características:**
-- Formatea montos a moneda colombiana (COP)
-- Formatea fechas a formato legible
-- Calcula total de ventas exitosas del día actual
-- Caching con `staleTime` y `gcTime`
+- **Patrón Híbrido**: Acepta `initialData` del servidor para mejor performance
+- **Separación de Datos RAW y Transformación**:
+  - Datos RAW se cachean una vez (no se re-fetch innecesariamente)
+  - Transformación se re-calcula con `useMemo` cuando cambia `dateFilter`
+- **Formateo Automático**:
+  - Montos a moneda colombiana (COP)
+  - Fechas a formato legible ("dd/MM/yyyy - HH:mm:ss")
+  - Status a texto legible
+- **Cálculo Dinámico**: `totalCountFormatted` se actualiza automáticamente cuando cambia `dateFilter`
+- **Caching**: `staleTime: 5min`, `gcTime: 10min`
+
+**Arquitectura Interna:**
+```typescript
+// 1. Query para datos RAW (se cachean)
+const rawDataQuery = useQuery<ApiResponse>({
+  queryKey: ['get-transactions-raw'],
+  initialData: initialData, // Del servidor
+});
+
+// 2. Transformación con useMemo (re-calcula cuando cambia dateFilter)
+const formattedData = useMemo(() => {
+  return formatTransactions(rawDataQuery.data, dateFilter);
+}, [rawDataQuery.data, dateFilter]);
+```
+
+**Relación con `lib/api/`:**
+- `lib/api/transactions.ts`: Función para Server Components (`getTransactions()`)
+- `lib/api/format-transactions.ts`: Función unificada para formatear transacciones
+- `lib/api/config.ts`: Configuración centralizada (URLs de API)
 
 ## 🔍 Filtros y Búsqueda
 
@@ -220,7 +276,7 @@ Este repositorio está configurado para **desplegarse automáticamente en Vercel
 
 ### Despliegue Automático
 
-Una vez conectado el repositorio a Vercel, el despliegue es completamente automático:
+El despliegue es completamente automático:
 
 - **Push a `main`**: Se despliega automáticamente a producción
 - **Pull Request**: Se crea un preview deployment con su propia URL única
@@ -247,27 +303,36 @@ Esto iniciará un servidor en `http://localhost:3000` con la versión optimizada
 
 ### ¿Por qué Next.js App Router?
 
-- Server Components para mejor performance
-- Streaming y Suspense nativos
-- Mejor SEO y carga inicial
+- **Server Components** para mejor performance y SEO
+- **Streaming y Suspense** nativos
+- **ISR (Incremental Static Regeneration)** para caching en servidor
+- **Patrón Híbrido**: Combina lo mejor de Server y Client Components
 
 ### ¿Por qué React Query?
 
-- Caching automático
-- Revalidación inteligente
-- Manejo de estado del servidor simplificado
+- **Caching automático** de datos RAW
+- **Revalidación inteligente** con `staleTime` y `gcTime`
+- **Manejo de estado del servidor** simplificado
+- **Separación de datos RAW y transformación**: Los datos se cachean una vez, la transformación se re-calcula cuando cambian los filtros
 
 ### ¿Por qué React Table?
 
-- Flexibilidad para filtros personalizados
-- Performance optimizada para grandes datasets
-- API extensible
+- **Flexibilidad** para filtros personalizados
+- **Performance optimizada** para grandes datasets
+- **API extensible** con funciones de filtro custom
 
 ### ¿Por qué Context API para filtros?
 
-- Estado global compartido
-- Sincronización con URL sin `useEffect`
-- Simplicidad para este caso de uso
+- **Estado global compartido** entre componentes
+- **Sincronización con URL** sin `useEffect` (directa)
+- **Simplicidad** para este caso de uso
+
+### ¿Por qué Patrón Híbrido?
+
+- **Mejor SEO**: Datos en HTML inicial
+- **Mejor Performance**: Menos requests HTTP, caching en servidor
+- **Mejor UX**: Datos disponibles inmediatamente, sin "flash" de contenido vacío
+- **ISR**: Caching automático en servidor con revalidación cada 60s
 
 ## 🧪 Testing
 
@@ -283,10 +348,10 @@ npm test              # Ejecutar todos los tests
 npm run test:watch    # Modo watch (re-ejecuta al cambiar archivos)
 npm run test:coverage # Con reporte de cobertura
 ```
-
 ## 📝 Notas Adicionales
 
-- La fuente Montserrat se aplica globalmente a toda la aplicación
-- Los colores personalizados están definidos en `tailwind.config.ts`
-- Los breakpoints personalizados permiten diseño responsive fino
-- La aplicación está optimizada para accesibilidad (ARIA, semántica HTML5)
+- **Fuente Montserrat**: Se aplica globalmente a toda la aplicación
+- **Colores personalizados**: Definidos en `tailwind.config.ts` (boldBlue, boldRed, etc.)
+- **Breakpoints personalizados**: Permiten diseño responsive fino (xs, sm, md, lg, xl, 2xl, 3xl)
+- **Accesibilidad**: Optimizada con ARIA, semántica HTML5 y navegación por teclado
+- **URLs centralizadas**: Todas las URLs de API están en `lib/api/config.ts` para fácil mantenimiento

@@ -10,6 +10,7 @@ import { useFilters } from "@/providers/filters-context";
 import CheckBoxFilter from "@/components/CheckBoxFilter";
 import { DATE_FILTER_MAP, DATE_FILTER_MAP_LABEL } from "@/constants";
 import { Box, CircularProgress } from '@mui/material';
+import type { ApiResponse } from '@/lib/api/transactions';
 
 /**
  * Componente de carga para el fallback de Suspense.
@@ -33,11 +34,15 @@ function TransactionsLoading() {
   );
 }
 
+interface DashboardClientProps {
+  initialData?: ApiResponse;
+}
+
 /**
  * Componente cliente que orquesta el dashboard principal.
  * 
  * Este componente encapsula toda la lógica del lado del cliente:
- * - Obtiene datos de transacciones con `useGetTransactions`
+ * - Obtiene datos de transacciones con `useGetTransactions` (puede usar initialData del servidor)
  * - Gestiona filtros globales con `useFilters`
  * - Renderiza todos los componentes del dashboard:
  *   - `SalesSummaryCard`: Resumen de ventas
@@ -48,16 +53,14 @@ function TransactionsLoading() {
  * 
  * Utiliza `Suspense` para manejar el estado de carga de `TransactionsTable`.
  * 
+ * @param {DashboardClientProps} props - Props del componente
+ * @param {ApiResponse} props.initialData - Datos iniciales desde Server Component (opcional)
  * @returns {JSX.Element} Dashboard completo con todos los componentes
  * 
- * @example
- * ```tsx
- * <DashboardClient />
- * ```
  */
-export default function DashboardClient() {
+export default function DashboardClient({ initialData }: DashboardClientProps) {
   const { globalFilter, setGlobalFilter, dateFilter } = useFilters();
-  const { data: transactionsData, isLoading } = useGetTransactions();
+  const { data: transactionsData, isLoading } = useGetTransactions(initialData);
 
   return (
     <div className="flex flex-col lg:px-12 px-4 container mx-auto py-14 gap-4">

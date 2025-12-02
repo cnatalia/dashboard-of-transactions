@@ -4,6 +4,7 @@ import {
   ColumnDef,
   SortingState,
   ColumnFiltersState,
+  VisibilityState,
   getCoreRowModel,
   getSortedRowModel,
   getPaginationRowModel,
@@ -105,6 +106,9 @@ const salesTypeFilterFn: FilterFn<any> = (
 export function CommonTable<T>({ data, columns, pageSize = 10, onRowClick }: Props<T>) {
   const { globalFilter, dateFilter, salesTypeFilters } = useFilters();
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
+    salesType: false,
+  });
 
   // Combine both filters into a single filter value for react-table
   const combinedFilter = useMemo(
@@ -158,8 +162,10 @@ export function CommonTable<T>({ data, columns, pageSize = 10, onRowClick }: Pro
       globalFilter: combinedFilter,
       sorting,
       columnFilters: activeColumnFilters,
+      columnVisibility,
     },
     onSortingChange: setSorting,
+    onColumnVisibilityChange: setColumnVisibility,
     globalFilterFn: customGlobalFilterFn,
     filterFns: {
       dateColumnFilter: dateColumnFilterFn,
