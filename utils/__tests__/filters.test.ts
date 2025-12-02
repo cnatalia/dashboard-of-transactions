@@ -16,7 +16,7 @@ describe('matchesDateFilter', () => {
 
   describe('DATE_FILTER_MAP.TODAY - Success scenarios', () => {
     it('should return true for transaction created today at midnight', () => {
-      const todayTimestamp = new Date('2024-12-15T00:00:00Z').getTime();
+      const todayTimestamp = new Date('2024-12-15T10:00:00Z').getTime();
       expect(matchesDateFilter(todayTimestamp, DATE_FILTER_MAP.TODAY)).toBe(true);
     });
 
@@ -50,7 +50,8 @@ describe('matchesDateFilter', () => {
 
   describe('DATE_FILTER_MAP.THIS_MONTH - Success scenarios', () => {
     it('should return true for transaction created on first day of month', () => {
-      const firstDayTimestamp = new Date('2024-12-01T00:00:00Z').getTime();
+      // Usar un horario que funcione con startOfDay local (no medianoche UTC)
+      const firstDayTimestamp = new Date('2024-12-01T12:00:00Z').getTime();
       expect(matchesDateFilter(firstDayTimestamp, DATE_FILTER_MAP.THIS_MONTH)).toBe(true);
     });
 
@@ -84,6 +85,17 @@ describe('matchesDateFilter', () => {
 });
 
 describe('customGlobalFilterFn', () => {
+  const mockNow = new Date('2024-12-15T12:00:00Z'); // Domingo 15 de diciembre de 2024
+
+  beforeAll(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(mockNow);
+  });
+
+  afterAll(() => {
+    jest.useRealTimers();
+  });
+
   const createMockRow = (data: any) => ({
     original: data,
     id: '1',

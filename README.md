@@ -216,18 +216,32 @@ Los filtros se guardan automáticamente en la URL:
 
 ## 🚢 Despliegue
 
-### Vercel (Recomendado)
+Este repositorio está configurado para **desplegarse automáticamente en Vercel**.
 
-1. Conectar el repositorio a Vercel
-2. Configurar variables de entorno si es necesario
-3. Deploy automático en cada push a `main`
+### Despliegue Automático
 
-### Build Manual
+Una vez conectado el repositorio a Vercel, el despliegue es completamente automático:
+
+- **Push a `main`**: Se despliega automáticamente a producción
+- **Pull Request**: Se crea un preview deployment con su propia URL única
+- **Sin configuración adicional**: Vercel detecta automáticamente Next.js y configura el build
+
+### URLs de Despliegue
+
+- **Producción**: `https://dashboard-bold.vercel.app` (actualiza con cada push a `main`)
+- **Preview**: `https://dashboard-bold-git-feature-branch.vercel.app` (una URL por cada PR)
+
+
+### Build Local (Para Testing)
+
+Para probar el build de producción localmente:
 
 ```bash
 npm run build
 npm run start
 ```
+
+Esto iniciará un servidor en `http://localhost:3000` con la versión optimizada de producción.
 
 ## 💡 Decisiones Técnicas
 
